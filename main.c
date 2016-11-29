@@ -16,6 +16,12 @@ GtkWidget* drawing_area;
 gboolean isConfigured = FALSE;
 
 float transition_alpha = 0.0f;
+//Texture coordinates for background
+float tx1 = 0.0f, ty1 = 0.0f, tw1 = 1.0f, th1 = 1.0f;
+float tx2 = 0.0f, ty2 = 0.0f, tw2 = 1.0f, th2 = 1.0f;
+
+int screen_width;
+int screen_height;
 
 GSettings* gsettings;
 
@@ -24,19 +30,19 @@ GLuint tex1Map;
 GLuint tex2Map;
 GLuint transitionAlpha;
 
-const GLchar* vertSource = "varying vec2 texCoord;"
+const GLchar* vertSource = "varying vec4 texCoord;"
     "void main(void) {"
     "	gl_Position = gl_Vertex;"
-    "	texCoord = gl_MultiTexCoord0.xy;"
+    "	texCoord = gl_MultiTexCoord0;"
     "}";
 
-const GLchar* fragSource = "varying vec2 texCoord;"
+const GLchar* fragSource = "varying vec4 texCoord;"
     "uniform sampler2D tex1Map;"
     "uniform sampler2D tex2Map;"
     "uniform float transitionAlpha;"
     "void main (void) {"
-    "   vec4 tex1 = texture2D( tex1Map, texCoord );"
-    "   vec4 tex2 = texture2D( tex2Map, texCoord );"
+    "   vec4 tex1 = texture2D( tex1Map, texCoord.xy );"
+    "   vec4 tex2 = texture2D( tex2Map, texCoord.zw );"
     "	gl_FragColor = mix( tex2, tex1, transitionAlpha );"
     "}";
 
@@ -122,6 +128,29 @@ void load_wallpaper_pixels(GdkPixbuf* pixbuf)
 	//gconf_client_set_string( client, "/desktop/eric/theme_color", buffer, NULL );
     g_settings_set_string( gsettings, "primary-color", buffer );
 	
+    //Calculate texture coordiantes
+    tx2 = tx1; ty2 = ty1; tw2 = tw1; th2 = th1; //Copy old values
+    float aspect = (float)screen_width/(float)screen_height;
+    float sw, sh;
+    if( (float)width / aspect >= (float)screen_height )
+    {
+        //Scale width, crop height
+        tx1 = 0.0f;
+        tw1 = 1.0f;
+        th1 = ((float)width / aspect)/(float)height;
+        ty1 = (1.0f - th1) / 2.0f;
+    }
+    else
+    {
+        //Scale height, crop width
+        ty1 = 0.0f;
+        th1 = 1.0f;
+        tw1 = ((float)height * aspect)/(float)width;
+        tx1 = (1.0f - tw1) / 2.0f;
+    }
+
+    printf( "tx: %f, ty: %f, tw: %f, th: %f\n", tx1, ty1, tw1, th1 );
+
 	glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,pixels);
 }
 
@@ -233,16 +262,16 @@ void render_gl()
     glBegin(GL_QUADS);
     glColor3f(1.0,1.0,1.0);
     
-    glTexCoord2f(0,0);
+    glTexCoord4f(tx1,ty1,tx2,ty2);
     glVertex2f(-1,1);
     
-    glTexCoord2f(1,0);
+    glTexCoord4f(tx1+tw1,ty1,tx2+tw2,ty2);
     glVertex2f(1,1);
     
-    glTexCoord2f(1,1);
+    glTexCoord4f(tx1+tw1,ty1+th1,tx2+tw2,ty2+th2);
     glVertex2f(1,-1);
     
-    glTexCoord2f(0,1);
+    glTexCoord4f(tx1,ty1+th1,tx2,ty2+th2);
     glVertex2f(-1,-1);        
     glEnd();                 
 
@@ -311,8 +340,8 @@ gboolean button_press_event( GtkWidget* widget, GdkEventButton* event, gpointer 
 gboolean screen_changed_event( GtkWidget* widget, GdkScreen *old_screen, gpointer user )
 {
 	GdkScreen* screen = gdk_screen_get_default();
-	int screen_width = gdk_screen_get_width( screen );
-	int screen_height = gdk_screen_get_height( screen );
+	screen_width = gdk_screen_get_width( screen );
+	screen_height = gdk_screen_get_height( screen );
 
 	//gtk_window_move( GTK_WINDOW( window ), 0, 0 );
 	gtk_window_resize( GTK_WINDOW( window ), screen_width, screen_height );
@@ -324,8 +353,8 @@ int main( int argc, char* argv[] )
 	gtk_init( &argc, &argv );
 
 	GdkScreen* screen = gdk_screen_get_default();
-	int screen_width = gdk_screen_get_width( screen );
-	int screen_height = gdk_screen_get_height( screen );
+	screen_width = gdk_screen_get_width( screen );
+	screen_height = gdk_screen_get_height( screen );
 	
 	window = gtk_window_new( GTK_WINDOW_TOPLEVEL );
  	gtk_window_set_type_hint( GTK_WINDOW( window ), GDK_WINDOW_TYPE_HINT_DESKTOP );

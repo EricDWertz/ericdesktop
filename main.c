@@ -132,7 +132,9 @@ void load_wallpaper_pixels(GdkPixbuf* pixbuf)
     tx2 = tx1; ty2 = ty1; tw2 = tw1; th2 = th1; //Copy old values
     float aspect = (float)screen_width/(float)screen_height;
     float sw, sh;
-    if( (float)width / aspect >= (float)screen_height )
+    float targetheight = (float)width / aspect;
+    float targetwidth = (float)height * aspect;
+    if( targetwidth >= screen_width )
     {
         //Scale width, crop height
         tx1 = 0.0f;
@@ -149,6 +151,7 @@ void load_wallpaper_pixels(GdkPixbuf* pixbuf)
         tx1 = (1.0f - tw1) / 2.0f;
     }
 
+    printf( "target width: %f, target height: %f\n", targetwidth, targetheight );
     printf( "tx: %f, ty: %f, tw: %f, th: %f\n", tx1, ty1, tw1, th1 );
 
 	glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,pixels);

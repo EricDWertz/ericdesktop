@@ -8,6 +8,7 @@
 #include <GL/glu.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 GtkWidget* window;
@@ -134,7 +135,7 @@ void load_wallpaper_pixels(GdkPixbuf* pixbuf)
     float sw, sh;
     float targetheight = (float)width / aspect;
     float targetwidth = (float)height * aspect;
-    if( targetwidth >= screen_width )
+    if( targetwidth >= screen_width && targetwidth <= height )
     {
         //Scale width, crop height
         tx1 = 0.0f;
@@ -378,7 +379,27 @@ int main( int argc, char* argv[] )
     GSettingsSchema* gsettings_schema;
 
     gsettings_schema = g_settings_schema_source_lookup( g_settings_schema_source_get_default(),
-                                                "org.gnome.desktop.background",
+                             
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   "org.gnome.desktop.background",
                                                 TRUE );
     if( gsettings_schema )
     {

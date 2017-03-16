@@ -147,7 +147,7 @@ void load_wallpaper_pixels(GdkPixbuf* pixbuf)
         targetheight = targetwidth / (float)width * (float)height;
     }
 
-    if( targetwidth >= screen_width || targetheight <= screen_height )
+    if( targetwidth == screen_width )
     {
         //Scale width, crop height
         tx1 = 0.0f;

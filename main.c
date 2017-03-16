@@ -129,13 +129,25 @@ void load_wallpaper_pixels(GdkPixbuf* pixbuf)
 	//gconf_client_set_string( client, "/desktop/eric/theme_color", buffer, NULL );
     g_settings_set_string( gsettings, "primary-color", buffer );
 	
-    //Calculate texture coordiantes
+    //Calculate texture coordinates
     tx2 = tx1; ty2 = ty1; tw2 = tw1; th2 = th1; //Copy old values
     float aspect = (float)screen_width/(float)screen_height;
     float sw, sh;
-    float targetheight = (float)width / aspect;
-    float targetwidth = (float)height * aspect;
-    if( targetwidth >= screen_width && targetwidth <= height )
+    float targetheight = screen_height;
+    float targetwidth = screen_width;
+    float mw = targetwidth/(float)width;
+    float mh = targetheight/(float)height;
+
+    if( mh > mw )
+    {
+       targetwidth = targetheight / (float)height * (float)width;
+    }
+    else if ( mw > mh )
+    {
+        targetheight = targetwidth / (float)width * (float)height;
+    }
+
+    if( targetwidth >= screen_width || targetheight <= screen_height )
     {
         //Scale width, crop height
         tx1 = 0.0f;
@@ -379,28 +391,8 @@ int main( int argc, char* argv[] )
     GSettingsSchema* gsettings_schema;
 
     gsettings_schema = g_settings_schema_source_lookup( g_settings_schema_source_get_default(),
-                             
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                   "org.gnome.desktop.background",
-                                                TRUE );
+                    "org.gnome.desktop.background",
+                    TRUE );
     if( gsettings_schema )
     {
         g_settings_schema_unref (gsettings_schema);
